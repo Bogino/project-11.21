@@ -1,50 +1,59 @@
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.*;
 import java.util.concurrent.RecursiveAction;
 
 public class Parser extends RecursiveAction {
-    private String URL;
 
-    public Parser(String url){
+    private String URL;
+    private Queue<String> parsedLinks;
+
+
+    public Parser(String url, Queue<String> links){
+        parsedLinks = links;
         URL = url;
     }
 
     @Override
     protected void compute() {
-        Document doc = null;
+        if (!parsedLinks.contains(URL)) {
 
-        try {
-            doc = Jsoup.connect(URL).maxBodySize(0).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Elements titles = doc.select("a[href^=https://skillbox.ru/]");
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter("data/URLs.txt");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
-        for (Element element : titles){
-            writer.write(element.absUrl("href").substring(0,element.absUrl("href").lastIndexOf("/")+1) + "\n");
+            parsedLinks.add(URL);
+
+            Document doc = null;
+
             try {
-                for (Element el : Jsoup.connect(element.absUrl("href").substring(0,element.absUrl("href").lastIndexOf("/")+1)).maxBodySize(0).get().select("a[href^=https://skillbox.ru/]")){
-                   writer.write("\t" + el.absUrl("href") + "\n");
-                }
-            } catch (IOException e) {
+                doc = Jsoup
+                        .connect(URL)
+                        .ignoreContentType(true)
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36")
+                        .timeout(0)
+                        .ignoreHttpErrors(true)
+                        .get();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            Elements titles = doc.select("a[href^=https://skillbox.ru/]");
+
+            for (Element element : titles) {
+                String link = element.absUrl("href").substring(0, element.absUrl("href").lastIndexOf("/") + 1);
+                System.out.println(link);
+                Parser p = new Parser(link, parsedLinks);
+                p.compute();
+            }
+
         }
-        writer.flush();
-        writer.close();
+
+
+
+
+
+
 
     }
-
 }
-
