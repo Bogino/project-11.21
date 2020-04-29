@@ -3,6 +3,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.RecursiveAction;
 
@@ -11,24 +13,35 @@ public class Parser extends RecursiveAction {
     private String URL;
     private Queue<String> parsedLinks;
     private String domain;
+    private PrintWriter writer;
+    private String tab;
+    private int count;
 
 
-    public Parser(String url, Queue<String> links, String domain){
+    public Parser(String url, Queue<String> links, String domain, PrintWriter writer, String tab, int count){
         parsedLinks = links;
         URL = url;
         this.domain = domain;
+        this.writer = writer;
+        this.tab = tab;
+        this.count = count;
     }
 
     @Override
     protected void compute() {
         if (!parsedLinks.contains(URL)) {
 
-
-            parsedLinks.add(URL);
-
-            Document doc = null;
-
             try {
+                writer.write(tab + URL + "\n");
+                count++;
+                for(int i = 0; i <count; i++){
+                    tab+="\t";
+                }
+
+                parsedLinks.add(URL);
+
+                Document doc = null;
+
                 doc = Jsoup
                         .connect(URL)
                         .ignoreContentType(true)
@@ -36,9 +49,7 @@ public class Parser extends RecursiveAction {
                         .timeout(0)
                         .ignoreHttpErrors(true)
                         .get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
 
             Elements titles = doc.select("a[href^=https:" + domain + "]");
 
@@ -48,17 +59,13 @@ public class Parser extends RecursiveAction {
                     continue;
                 }
                 System.out.println(link);
-                Parser p = new Parser(link, parsedLinks, domain);
+                Parser p = new Parser(link, parsedLinks, domain, writer, tab, count);
                 p.compute();
             }
 
+        } catch (Exception e){
+                e.printStackTrace();
+            }
         }
-
-
-
-
-
-
-
     }
 }
