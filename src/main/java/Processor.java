@@ -17,7 +17,9 @@ public class Processor {
 
 
         Queue<String> links = new LinkedList<>();
-        Parser p = new Parser("https://skillbox.ru/", links);
+        String URL = "https://skillbox.ru/";
+        String domen = "//skillbox.ru/";
+        Parser p = new Parser(URL, links, domen);
         ForkJoinPool fjp = ForkJoinPool.commonPool();
         fjp.invoke(p);
 

@@ -10,11 +10,13 @@ public class Parser extends RecursiveAction {
 
     private String URL;
     private Queue<String> parsedLinks;
+    private String domain;
 
 
-    public Parser(String url, Queue<String> links){
+    public Parser(String url, Queue<String> links, String domain){
         parsedLinks = links;
         URL = url;
+        this.domain = domain;
     }
 
     @Override
@@ -38,12 +40,15 @@ public class Parser extends RecursiveAction {
                 e.printStackTrace();
             }
 
-            Elements titles = doc.select("a[href^=https://skillbox.ru/]");
+            Elements titles = doc.select("a[href^=https:" + domain + "]");
 
             for (Element element : titles) {
-                String link = element.absUrl("href").substring(0, element.absUrl("href").lastIndexOf("/") + 1);
+                String link = element.absUrl("href");
+                if (link.equals("")){
+                    continue;
+                }
                 System.out.println(link);
-                Parser p = new Parser(link, parsedLinks);
+                Parser p = new Parser(link, parsedLinks, domain);
                 p.compute();
             }
 
